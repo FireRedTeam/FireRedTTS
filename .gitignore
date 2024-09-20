@@ -1,0 +1,14 @@
+**/__pycache__/
+**/build/
+*/**/*.pyc
+*/**/logs/*
+# */**/*.txt
+*/**/*.m4a
+.vscode/*
+damo/*
+.cache/*
+*/**/*.mp3
+!3.wav
+*/**/.DS_Store
+*.egg-info
+*/**/*.pt
