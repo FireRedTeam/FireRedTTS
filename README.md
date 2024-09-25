@@ -17,7 +17,7 @@
 
 ## News
 
-- **[2024/09/26] 🔥 Our model is already available on [huggingface space](https://huggingface.co/spaces/fireredteam/FireRedTTS)，try it through the interactive interface**
+- **👉🏻[2024/09/26] 🔥 Our model is already available on [huggingface space](https://huggingface.co/spaces/fireredteam/FireRedTTS)，try it through the interactive interface👈🏻**
 - [2024/09/20] 🔥 We release the pre-trained checkpoints and inference code.
 - [2024/09/06] 🔥 We release the [technical report](https://arxiv.org/abs/2409.03283) and [project page](https://fireredteam.github.io/demos/firered_tts/)
 
