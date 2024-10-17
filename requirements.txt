@@ -7,3 +7,4 @@ tiktoken==0.7.0
 inflect==7.4.0
 lingua-language-detector==2.0.2
 WeTextProcessing==1.0.3
+sentencex==0.6.1

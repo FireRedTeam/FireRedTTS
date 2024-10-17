@@ -169,10 +169,10 @@ class TextNormalizer:
         text = text.lower().strip()
         text = text.replace('"', "")
         text = text.replace("·", " ")
-        text = re.sub("[…~、！，？：；!?:;]+", ",", text)
+        text = re.sub("[…~！，&*%$#^：；!:;]+", ",", text)
         text = re.sub("[,]+", ",", text)
         text = re.sub(r"[,. ]+$", ".", text)
-        if len(text) > 0 and text[-1] != ".":
+        if len(text) > 0 and text[-1] not in ".?":
             text = text + "."
 
         return text, text_lang

@@ -6,7 +6,7 @@ from fireredtts.modules import Token2Wav, MelSpectrogramExtractor
 from fireredtts.modules.tokenizer.tokenizer import VoiceBpeTokenizer
 from fireredtts.modules.codec.speaker import SpeakerEmbedddingExtractor
 from fireredtts.utils.utils import load_audio
-
+from fireredtts.modules.text_normalizer.utils import text_split
 import time
 
 
@@ -94,7 +94,7 @@ class FireRedTTS:
                 top_p=0.85,
                 top_k=30,
                 temperature=0.75,
-                num_return_sequences=9,
+                num_return_sequences=7,
                 num_beams=1,
                 length_penalty=1.0,
                 repetition_penalty=2.0,
@@ -109,13 +109,13 @@ class FireRedTTS:
             seqs.append(seq)
 
         sorted_seqs = sorted(seqs, key=lambda i: len(i), reverse=False)
-        gpt_codes = sorted_seqs[2].unsqueeze(0)  # [1, len]
+        gpt_codes = sorted_seqs[1].unsqueeze(0)  # [1, len]
         # sorted_len = [len(l) for l in sorted_seqs]
         # print("---sorted_len:", sorted_len)
 
         return gpt_codes
 
-    def synthesize(self, prompt_wav, text, lang="auto"):
+    def synthesize_base(self, prompt_wav, text, lang="auto"):
         """_summary_
 
         Args:
@@ -161,3 +161,20 @@ class FireRedTTS:
         # rtf_all = all_dur / audio_dur
 
         return rec_wavs
+
+    def synthesize(self, prompt_wav, text, lang="auto"):
+        """_summary_
+
+        Args:
+            prompt_wav (_type_): _description_
+            text (_type_): _description_
+            lang (str, optional): _description_. Defaults to "auto".
+        """
+        substrings = text_split(text=text)
+
+        out_wavs = []
+        for sub in substrings:
+            chunk = self.synthesize_base(prompt_wav=prompt_wav, text=sub, lang=lang)
+            out_wavs.append(chunk.detach().cpu())
+        out_wav = torch.concat(out_wavs, axis=-1)
+        return out_wav
