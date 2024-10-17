@@ -19,6 +19,7 @@
 
 ## News
 
+- [2024/10/17] 🔥 We release [new rich-punctuation model](https://huggingface.co/fireredteam/FireRedTTS/tree/main), offering expanded punctuation coverage and enhanced audio production consistency. In addition, we have strengthened the capabilities of the text front-end and enhanced the stability of synthesis.
 - [2024/09/26] 🔥 Our model is already available on [huggingface space](https://huggingface.co/spaces/fireredteam/FireRedTTS)，try it through the interactive interface.
 - [2024/09/20] 🔥 We release the pre-trained checkpoints and inference code.
 - [2024/09/06] 🔥 We release the [technical report](https://arxiv.org/abs/2409.03283) and [project page](https://fireredteam.github.io/demos/firered_tts/)
@@ -30,7 +31,7 @@
   - [ ] Release testing set.
 
 - [ ] 2024/10
-  - [ ] Release rich punctuation version.
+  - [x] Release rich punctuation version.
   - [ ] Release finetuned checkpoints for controllable human-like speech generation.
 
 ## Usage
