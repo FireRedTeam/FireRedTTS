@@ -78,8 +78,8 @@ symbol_reduction = {
 strong_break = re.compile("([。”;；!！：…?？）\)\]』】」}~\r\n]| \.)", re.UNICODE)
 weak_break = re.compile(
     "["
-    "\U00002702-\U000027B0\U0001f926-\U0001f937\U00010000-\U0001fbff\U00030000-\U0010ffff"
-    "\u2640-\u2642\u2600-\u2B55\u23cf\u23e9\u231a\ufe0f\u3030"
+    "\U00002702-\U000027b0\U0001f926-\U0001f937\U00010000-\U0001fbff\U00030000-\U0010ffff"
+    "\u2640-\u2642\u2600-\u2b55\u23cf\u23e9\u231a\ufe0f\u3030"
     "\t，,. ]",
     re.UNICODE,
 )
@@ -160,38 +160,12 @@ def text_split(text):
         substrings = list(segment("zh", text))
         new_substrings = []
         for s in substrings:
-            if len(s) > 30:
-                new_substrings += zh_text_split(s, length=30)
+            if len(s) > 50:
+                new_substrings += zh_text_split(s, length=50)
             else:
                 new_substrings.append(s)
         substrings = new_substrings
     else:
         substrings = list(segment("en", text))
 
-    # merge substrings
-    final_substrings = []
-    temp_string = ""
-    for i in range(len(substrings)):
-        s = substrings[i]
-        s = s.replace("。", ",")
-
-        if i == 0:
-            temp_string = s
-        else:
-            temp_string += s
-
-        if len(temp_string) > 30:
-            final_substrings.append(temp_string)
-            temp_string = ""
-
-        if i == len(substrings) - 1:
-            if temp_string != "":
-                final_substrings.append(temp_string)
-            break
-
-    if len(final_substrings) >= 2:
-        if len(final_substrings[-1]) < 15:
-            final_substrings[-2] += final_substrings[-1]
-        final_substrings = final_substrings[:-1]
-
-    return final_substrings
+    return substrings

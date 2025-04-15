@@ -134,8 +134,12 @@ class TextNormalizer:
 
         if language == Language.CHINESE:
             text = self.zh_normalizer.normalize(text)
+            # print("---text after zh_normalizer:", text)
             text = text.replace("\n", "")
+            text = text.replace(",", "，")
+            text = text.replace(".", "。")
             text = re.sub(r"[，,]+$", "。", text)
+            # print("---text after zh_normalizer 2:", text)
         else:
             text = re.sub(r"[^ 0-9A-Za-z\[\]'.,:?!_\-]", "", text)
             text = self.en_normalizer.normalize(text)
@@ -161,18 +165,19 @@ class TextNormalizer:
         text = " ".join([p for p in pieces if p != " "])
 
         # post TN full to half
-        text = text.replace("。", ".")
-        text = text.replace("，", ",")
-        text = text.replace("：", ":")
+        # text = text.replace("。", ".")
+        # text = text.replace("，", ",")
+        # text = text.replace("：", ":")
 
         # model limitations
         text = text.lower().strip()
         text = text.replace('"', "")
         text = text.replace("·", " ")
-        text = re.sub("[…~！，&*%$#^：；!:;]+", ",", text)
+        # text = re.sub("[…~！，&*%$#^：；!:;]+", ",", text)
+        text = re.sub("[…~！&*%$#^：；!:;]+", ",", text)
         text = re.sub("[,]+", ",", text)
         text = re.sub(r"[,. ]+$", ".", text)
         if len(text) > 0 and text[-1] not in ".?":
             text = text + "."
-
+        text = text.replace("。.", "。")
         return text, text_lang

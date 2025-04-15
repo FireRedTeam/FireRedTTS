@@ -4,36 +4,30 @@
   <img src="assets/FireRedTTS_Logo.png" width="300px">
 </p>
 
-<h1>FireRedTTS: A Foundation Text-To-Speech Framework for Industry-Level Generative Speech Applications</h1>
+<h1>FireRedTTS-1S: An Upgraded Streamable Foundation
+Text-to-Speech System</h1>
 
 <p align="center">
-  <img src="assets/FireRedTTS_Model.png">
+  <img src="assets/FireRedTTS_S_Model.png">
 </p>
 </div>
 
-#### 👉🏻 [FireRedTTS Paper](https://arxiv.org/abs/2409.03283) 👈🏻
+#### 👉🏻 [FireRedTTS-1S Paper](https://arxiv.org/abs/2503.20499) 👈🏻
 
-#### 👉🏻 [FireRedTTS Demos](https://fireredteam.github.io/demos/firered_tts/) 👈🏻
+#### 👉🏻 [FireRedTTS-1S Demos](https://fireredteam.github.io/demos/firered_tts_1s/) 👈🏻
 
-#### 👉🏻 [FireRedTTS Space (Interactive Demo)](https://huggingface.co/spaces/fireredteam/FireRedTTS) 👈🏻
+##### ⚠️ Note: The current branch is `FireRedtts-1s`. To access `FireRedtts-1`, please switch to the `FireRedtts-1` branch
 
 ## News
 
-- [2024/10/17] 🔥 We release [new rich-punctuation model](https://huggingface.co/fireredteam/FireRedTTS/tree/main), offering expanded punctuation coverage and enhanced audio production consistency. In addition, we have strengthened the capabilities of the text front-end and enhanced the stability of synthesis.
-- [2024/09/26] 🔥 Our model is already available on [huggingface space](https://huggingface.co/spaces/fireredteam/FireRedTTS)，try it through the interactive interface.
-- [2024/09/20] 🔥 We release the pre-trained checkpoints and inference code.
-- [2024/09/06] 🔥 We release the [technical report](https://arxiv.org/abs/2409.03283) and [project page](https://fireredteam.github.io/demos/firered_tts/)
+- [2025/04/14] 🔥 We release the pre-trained checkpoints and inference code.
+- [2025/03/25] 🔥 We release the [technical report](https://arxiv.org/abs/2503.20499)
 
 ## Roadmap
 
-- [ ] 2024/09
+- [x] 2025/04
   - [x] Release the pre-trained checkpoints and inference code.
-  - [ ] Release testing set.
-
-- [ ] 2024/10
-  - [x] Release rich punctuation version.
-  - [ ] Release finetuned checkpoints for controllable human-like speech generation.
-
+  
 ## Usage
 
 #### Clone and install
@@ -58,6 +52,7 @@ conda install pytorch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 pytorch-cuda=
 conda install pytorch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 pytorch-cuda=12.1 -c pytorch -c nvidia
 
 # step3.install fireredtts form source
+cd fireredtts
 pip install -e . 
 
 # step4.install other requirements
@@ -66,7 +61,7 @@ pip install -r requirements.txt
 
 #### Download models
 
-Download the required model files from [**Model_Lists**](https://huggingface.co/fireredteam/FireRedTTS/tree/main) and place them in the folder `pretrained_models`
+Download the required model files from [**Model_Lists**](https://huggingface.co/FireRedTeam/FireRedTTS-1S/tree/main) and place them in the folder `pretrained_models`
 
 #### Basic Usage
 
@@ -75,17 +70,24 @@ import os
 import torchaudio
 from fireredtts.fireredtts import FireRedTTS
 
+
 tts = FireRedTTS(
-    config_path="configs/config_24k.json",
-    pretrained_path=<pretrained_models_dir>,
-)
+        config_path="configs/config_24k.json",
+        pretrained_path=<pretrained_models_dir>,
+  )
 
 #same language
+# For the test-hard evaluation, we enabled the use_tn=True configuration setting.
 rec_wavs = tts.synthesize(
-        prompt_wav="examples/prompt_1.wav",
-        text="小红书，是中国大陆的网络购物和社交平台，成立于二零一三年六月。",
-        lang="zh",
+  prompt_wav="examples/prompt_1.wav",
+  prompt_text="对，所以说你现在的话，这个账单的话，你既然说能处理，那你就想办法处理掉。",
+  text="小红书，是中国大陆的网络购物和社交平台，成立于二零一三年六月。",
+  lang="zh",
+  use_tn=True
 )
+
+
+
 
 rec_wavs = rec_wavs.detach().cpu()
 out_wav_path = os.path.join("./example.wav")
@@ -95,12 +97,26 @@ torchaudio.save(out_wav_path, rec_wavs, 24000)
 
 ## Tips
 
-- Removing the long silence (>1s) in the middle of prompt_wav may bring better stability. If there are too many long silences in your prompt_wav and it causes stability problems, it is recommended to use our tool(`tools/process_prompts.py`) to remove the silence.
+- The reference audio should not be too long or too short; a duration of 3 to 10 seconds is recommended.
+- The reference audio should be smooth and natural, and the accompanying text must be accurate to enhance the stability and naturalness of the synthesized audio.
 
 ## Acknowledgements
 
 - [**Tortoise-tts**](https://github.com/neonbjb/tortoise-tts) and [**XTTS-v2**](https://github.com/coqui-ai/TTS) offer invaluable insights for constructing an autoregressive-style system.
-- [**Matcha-TTS**](https://github.com/shivammehta25/Matcha-TTS) and [**CosyVoice**](https://github.com/FunAudioLLM/CosyVoice) demonstrate the excellent ability of flow-matching in converting audio code to mel.
-  
-- [**BigVGAN-v2**](https://github.com/NVIDIA/BigVGAN), utilized for vocoding.
-- We referred to [**whisper’s**](https://github.com/openai/whisper) text tokenizer solution.
+
+- We referred to [**fish-speech**](https://github.com/fishaudio/fish-speech) text tokenizer solution.
+
+- We referred to [**BigCodec**](https://github.com/Aria-K-Alethia/BigCodec) speech codec solution.
+
+- We referred to [**Encodec**](https://github.com/facebookresearch/encodec) causal convolution solution.
+
+- We referred to [**SpeechBrain**](https://github.com/speechbrain/speechbrain) ECAPA-TDNN solution.
+
+- We referred to [**ChineseSpeechPretrain**](https://github.com/TencentGameMate/chinese_speech_pretrain) HuBERT model.
+
+## ⚠️ Usage Disclaimer ❗️❗️❗️❗️❗️❗️
+
+- The project incorporates zero-shot voice cloning functionality; Please note that this capability is intended **solely for academic research purposes**.
+- **DO NOT** use this model for **ANY illegal activities**❗️❗️❗️❗️❗️❗️
+- The developers assume no liability for any misuse of this model.
+- If you identify any instances of **abuse**, **misuse**, or **fraudulent** activities related to this project, **please report them to our team immediately.**

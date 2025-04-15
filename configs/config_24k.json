@@ -1,123 +1,171 @@
 {
-    "gpt": {
-        "gpt_max_audio_tokens": 630,
-        "gpt_max_text_tokens": 402,
-        "gpt_max_prompt_tokens": 70,
-        "gpt_layers": 30,
-        "gpt_n_model_channels": 1024,
-        "gpt_n_heads": 16,
-        "gpt_number_text_tokens": 57341,
-        "gpt_start_text_token": 57187,
-        "gpt_stop_text_token": 57184,
-        "gpt_num_audio_tokens": 16386,
-        "gpt_start_audio_token": 16384,
-        "gpt_stop_audio_token": 16385,
-        "gpt_code_stride_len": 640,
-        "duration_const": 102400,
-        "min_conditioning_length": 48000,
-        "max_conditioning_length": 128000,
-        "max_wav_length": 320000,
-        "max_text_length": 200
+    "semantic_llm": {
+        "start_text_token": 32000,
+        "stop_text_token": 32001,
+        "num_text_tokens": 32002,
+        "start_audio_token": 16384,
+        "stop_audio_token": 16385,
+        "num_audio_tokens": 16386,
+        "llm_hidden_size": 1024,
+        "llm_intermediate_size": 4096,
+        "llm_num_layers": 30,
+        "llm_num_heads": 16,
+        "llm_max_audio_seq_len": 630,
+        "llm_max_text_seq_len": 402,
+        "llm_max_prompt_len": 250,
+        "code_stride_len": 640,
+        "EOS_TOKEN": 16385
     },
-    "flow": {
-        "output_size": 100,
-        "input_embedding": {
-            "out_channels": 512,
-            "codebook_path": "fireredtts/modules/flow/codebook.npy",
-            "freeze": true
+    "acoustic_llm": {
+        "n_stacks": 1,
+        "layers": 24,
+        "model_dim": 1536,
+        "heads": 16,
+        "max_text_tokens": 2048,
+        "max_speech_tokens": 2048,
+        "max_conditioning_inputs": 1,
+        "number_text_tokens": 16386,
+        "start_text_token": 16384,
+        "stop_text_token": 16385,
+        "n_frames_per_step": 1,
+        "n_heads_per_frame": 8,
+        "delay_prediction": 1,
+        "upsample_factors": 1,
+        "streaming_delayed_frames": 8,
+        "number_speech_tokens": 16386,
+        "start_speech_token": 16384,
+        "stop_speech_token": 16385,
+        "speaker_embedding_pretrained": true,
+        "speaker_embedding_ckpt": null,
+        "speaker_embedding_dim": 512,
+        "temperature": 0.5,
+        "repetition_penalty": 2.0,
+        "top_p": 0.5,
+        "top_k": 25
+    },
+    "acoustic_codec": {
+        "n_model_size": 1024,
+        "encoder_config": {
+            "ngf": 48,
+            "up_ratios": [
+                2,
+                4,
+                4,
+                4,
+                5
+            ],
+            "causal": true
         },
-        "encoder": {
-            "input_size": 512,
-            "output_size": 512,
-            "attention_heads": 8,
-            "linear_units": 2048,
-            "num_blocks": 6,
-            "dropout_rate": 0.01,
-            "srcattention_start_index": 0,
-            "srcattention_end_index": 2,
-            "attention_dropout_rate": 0.01,
-            "positional_dropout_rate": 0.01,
-            "key_bias": true,
-            "normalize_before": true
+        "decoder_config": {
+            "upsample_initial_channel": 1536,
+            "ngf": 48,
+            "up_ratios": [
+                6,
+                5,
+                4,
+                4,
+                2
+            ],
+            "causal": true
         },
-        "length_regulator": {
-            "channels": 512,
-            "num_blocks": 4
+        "vq_config": {
+            "n_groups": 8,
+            "ordered": true,
+            "codebook_size": [
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128
+            ],
+            "codebook_dim": [
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8
+            ],
+            "requires_projection": true,
+            "decay": 0.99,
+            "threshold_ema_dead_code": 0,
+            "commitment_weight": 0.01
         },
-        "mel_encoder": {
-            "in_channels": 100,
-            "out_channels": 512,
-            "hidden_channels": 384,
-            "reduction_rate": 4,
-            "n_layers": 2,
-            "n_blocks": 5,
-            "kernel_size": 3
-        },
-        "decoder": {
-            "t_scheduler": "cosine",
-            "inference_cfg_rate": 0.7,
-            "estimator": {
-                "in_channels": 200,
-                "out_channels": 100,
-                "channels": [
-                    256,
-                    256
-                ],
-                "dropout": 0,
-                "attention_head_dim": 64,
-                "n_blocks": 4,
-                "num_mid_blocks": 12,
-                "num_heads": 8,
-                "act_fn": "gelu"
-            }
+        "resampler_config": {
+            "source_sr": 16000,
+            "target_sr": 16000
         }
     },
-    "bigvgan": {
-        "num_mels": 100,
-        "upsample_initial_channel": 1536,
-        "upsample_rates": [
-            5,
-            3,
-            2,
-            2,
-            2,
+    "semantic_tokenizer": {
+        "in_dim": 1024,
+        "out_dim": 80,
+        "n_model_size": 512,
+        "downsample_scales": [
+            1,
+            1,
+            1,
             2
         ],
-        "upsample_kernel_sizes": [
-            11,
-            7,
-            4,
-            4,
-            4,
-            4
-        ],
-        "resblock_kernel_sizes": [
-            3,
-            7,
-            11
-        ],
-        "resblock_dilation_sizes": [
+        "upsample_scales": [
             [
-                1,
-                3,
-                5
+                2,
+                1
             ],
             [
+                2,
                 1,
-                3,
-                5
-            ],
-            [
                 1,
-                3,
-                5
+                1
             ]
         ],
-        "resblock_type": "1",
-        "snake_logscale": true,
-        "activation": "snakebeta",
-        "use_tanh_at_final": false,
-        "use_bias_at_final": false,
-        "use_cuda_kernel": false
+        "mel_config": {
+            "style": "BigVGAN",
+            "filter_length": 1024,
+            "hop_length": 160,
+            "win_length": 640,
+            "n_mel_channels": 80,
+            "sampling_rate": 16000
+        },
+        "vq_config": {
+            "codebook_size": [
+                128,
+                128
+            ],
+            "codebook_dim": [
+                128,
+                128
+            ],
+            "requires_projection": true
+        },
+        "tree_config": [
+            {
+                "downsample_rate": 1,
+                "n_groups": 1,
+                "dropout": 0
+            }
+        ],
+        "n_samples_per_token": 640,
+        "checkpointing": true
     }
 }
