@@ -11,48 +11,7 @@ from fireredtts.utils.spliter import clean_text
 from fireredtts.modules.text_normalizer.normalize import TextNormalizer
 from fireredtts.modules.semantic_tokenizer import SemanticTokenizer
 from fireredtts.modules.semantic_llm.llm_gpt2 import Speech_LLM_GPT2
-from fireredtts.modules.acoustic_llm import AcousticLLM
-from fireredtts.modules.acoustic_codec import AcousticCodec
-
-
-class TwoStageCodec:
-
-    def __init__(self, config):
-        self.acoustic_llm = AcousticLLM(**config["acoustic_llm"])
-        self.acoustic_codec = AcousticCodec(**config["acoustic_codec"])
-
-    def __call__(
-        self, semantic_token, prompt_semantic_token, prompt_acoustic_token, spk_gpt
-    ):
-        # print('Before: ', semantic_token.shape)
-        token_pred = torch.cat((prompt_semantic_token, semantic_token), dim=1)
-
-        # Fine LLM inference
-        token_pred = self.acoustic_llm.inference_speech(
-            speech_conditioning_latent=spk_gpt,
-            text_inputs=token_pred,
-            num_return_sequences=1,
-            input_tokens=prompt_acoustic_token,
-        )[0]
-
-        if isinstance(token_pred, (tuple, list)):
-            token_pred = [x.unsqueeze(0) for x in token_pred]
-        else:
-            token_pred = token_pred.unsqueeze(0)
-
-        acoustic_outputs = self.acoustic_codec.reconstruct_wav(token=token_pred)
-        wav = acoustic_outputs["wav_pred"].squeeze(1)
-
-        return wav
-
-    def extract(self, wavs, wav_lengths, spk):
-        if torch.cuda.is_available():
-            wavs = wavs.cuda()
-        cond_tok = self.acoustic_codec.extract_speech_tokens(wavs, wav_lengths)[
-            "token"
-        ][0]
-        spk_gpt = self.acoustic_llm.get_conditioning(spk)
-        return cond_tok, spk_gpt
+from fireredtts.models.token2audio import TwoStageCodec, FlowToken2Audio
 
 
 class FireRedTTS:
@@ -65,14 +24,19 @@ class FireRedTTS:
         self.tokenizer_path = os.path.join(pretrained_path, "tokenizer")
         self.speech_tokenizer_path = os.path.join(pretrained_path, "speech_tokenizer")
         self.semantic_llm_path = os.path.join(pretrained_path, "semantic_llm.pt")
-        self.acoustic_llm_path = os.path.join(pretrained_path, "acoustic_llm.bin")
-        self.acoustic_codec_path = os.path.join(pretrained_path, "acoustic_codec.bin")
-
         assert os.path.exists(self.tokenizer_path)
         assert os.path.exists(self.speech_tokenizer_path)
         assert os.path.exists(self.semantic_llm_path)
-        assert os.path.exists(self.acoustic_llm_path)
-        assert os.path.exists(self.acoustic_codec_path)
+        if 'acoustic_llm' in self.config:
+            self.acoustic_llm_path = os.path.join(pretrained_path, "acoustic_llm.bin")
+            self.acoustic_codec_path = os.path.join(pretrained_path, "acoustic_codec.bin")
+            assert os.path.exists(self.acoustic_llm_path)
+            assert os.path.exists(self.acoustic_codec_path)
+        else:
+            self.flow_path = os.path.join(pretrained_path, "flow.pt")
+            self.bigvgan_path = os.path.join(pretrained_path, "bigvgan.pt")
+            assert os.path.exists(self.flow_path)
+            assert os.path.exists(self.bigvgan_path)
 
         # text normalizer
         self.text_normalizer = TextNormalizer()
@@ -109,28 +73,23 @@ class FireRedTTS:
         )
 
         # Acoustic decoder
-        self.acoustic_decoder = TwoStageCodec(self.config)
-
-        self.acoustic_decoder.acoustic_llm.load_state_dict(
-            torch.load(self.acoustic_llm_path, map_location="cpu"), strict=True
-        )
-        self.acoustic_decoder.acoustic_llm = self.acoustic_decoder.acoustic_llm.to(
-            device=device
-        )
-        self.acoustic_decoder.acoustic_llm.eval()
-
-        self.acoustic_decoder.acoustic_codec.load_state_dict(
-            torch.load(self.acoustic_codec_path, map_location="cpu"), strict=True
-        )
-        self.acoustic_decoder.acoustic_codec = self.acoustic_decoder.acoustic_codec.to(
-            device=device
-        )
-        self.acoustic_decoder.acoustic_codec.eval()
+        if 'acoustic_llm' in self.config:
+            self.acoustic_decoder = TwoStageCodec(self.config)
+            self.acoustic_decoder.load_model(self.acoustic_llm_path, self.acoustic_codec_path)
+        else:
+            self.acoustic_decoder = FlowToken2Audio(self.config)
+            self.acoustic_decoder.load_model(self.flow_path, self.bigvgan_path)
+        self.acoustic_decoder.eval()
+        self.acoustic_decoder = self.acoustic_decoder.to(device)
 
     def extract_spk_embeddings(self, prompt_wav):
         audio, lsr, audio_resampled = load_audio(
             audiopath=prompt_wav,
             sampling_rate=16000,
+        )
+        _, _, audio_resampled24k = load_audio(
+            audiopath=prompt_wav,
+            sampling_rate=24000,
         )
 
         audio_resampled = audio_resampled.to(self.device)
@@ -144,7 +103,8 @@ class FireRedTTS:
         )
 
         prompt_acoustic_tokens, acoustic_llm_spk = self.acoustic_decoder.extract(
-            audio_resampled, audio_len, spk_embeddings.unsqueeze(0)
+            audio_resampled if isinstance(self.acoustic_decoder, TwoStageCodec) else audio_resampled24k, 
+            audio_len, spk_embeddings.unsqueeze(0)
         )
 
         return prompt_tokens, spk_embeddings, prompt_acoustic_tokens, acoustic_llm_spk
@@ -174,6 +134,8 @@ class FireRedTTS:
             text = prompt_text + " " + text
         else:
             text = prompt_text + text
+
+        print("---text:\n", text)
 
         # Pre-process prompt tokens
         # text to tokens
@@ -248,6 +210,9 @@ class FireRedTTS:
 
         spk_embeddings = spk_embeddings.unsqueeze(0)
         spk_semantic_llm = self.semantic_llm.reference_embedding(spk_embeddings)
+
+        print("---prompt_semantic_tokens:\n", prompt_semantic_tokens)
+        print("---spk_embeddings:\n", spk_embeddings)
 
         # clean text
         prompt_text = clean_text(prompt_text)

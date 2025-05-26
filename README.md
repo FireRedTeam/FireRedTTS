@@ -20,8 +20,8 @@ Text-to-Speech System</h1>
 
 ## News
 
-- [2025/04/14] 🔥 We release the pre-trained checkpoints and inference code.
-- [2025/03/25] 🔥 We release the [technical report](https://arxiv.org/abs/2503.20499)
+- [2025/05/26] 🔥 We add flow-mathing decoder and update the [technical report](https://arxiv.org/abs/2503.20499)
+- [2025/03/25] 🔥 We release the [technical report](https://arxiv.org/abs/2503.20499) and [project page](https://fireredteam.github.io/demos/firered_tts_1s/)
 
 ## Roadmap
 
@@ -67,14 +67,23 @@ Download the required model files from [**Model_Lists**](https://huggingface.co/
 
 ```python
 import os
-import torchaudio
+import torchaudio![alt text](image.png)
 from fireredtts.fireredtts import FireRedTTS
 
-
+# acoustic llm decoder
 tts = FireRedTTS(
         config_path="configs/config_24k.json",
         pretrained_path=<pretrained_models_dir>,
   )
+
+
+"""
+# flow matching decoder
+tts = FireRedTTS(
+        config_path="configs/config_24k_flow.json",
+        pretrained_path=<pretrained_models_dir>,
+)
+"""
 
 #same language
 # For the test-hard evaluation, we enabled the use_tn=True configuration setting.
