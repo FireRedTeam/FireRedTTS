@@ -8,34 +8,6 @@ from builtins import str as unicode
 
 import fireredtts.modules.text_normalizer.redtn as tn
 
-tn_engine = tn.RedTN(tn.__file__.split("redtn")[0] + "data")
-
-g2p_fixes = {
-    "差": [
-        (r"相位差", r"相位叉"),
-        (r"容差", r"容叉"),
-    ],
-    "好": [
-        (r"嗜好", r"谥号"),
-    ],
-    "丧": [
-        (r"丧期", r"桑期"),
-    ],
-    "扒": [
-        (r"扒墙", r"八墙"),
-    ],
-    "铺": [
-        (r"铺砌", r"扑砌"),
-    ],
-    "应": [
-        (r"应付([利款])", r"英付\1"),
-    ],
-    "撒": [
-        (r"拉撒路", r"拉萨路"),
-    ],
-}
-
-
 def preprocess_text(sentence):
     # preprocessing
     sentence = bytes(sentence, "utf-8").decode("utf-8", "ignore")
@@ -50,19 +22,7 @@ def preprocess_text(sentence):
 
 
 def postprocess_text(sentence):
-    # sentence = sentence.replace("壹", "一")
-    for k in g2p_fixes.keys():
-        if k in sentence:
-            rules = g2p_fixes[k]
-            for a, b in rules:
-                sentence = re.sub(a, b, sentence)
-
     sentence = sentence.replace("-", " ")
-    # sentence = sentence.replace("\"", " ")
-
-    # post TN full to half
-    # sentence = sentence.replace("。", ".")
-    # sentence = sentence.replace("，", ",")
     sentence = sentence.replace("：", ":")
     sentence = sentence.replace("？", "?")
 
@@ -103,12 +63,11 @@ def postprocess_text(sentence):
 
 class TextNormalizer:
     def __init__(self, data_dir):
-        # self.tn_engine = tn.RedTN(tn.__file__.split("redtn")[0] + "data")
         self.tn_engine = tn.RedTN(data_dir)
 
     def tn(self, text):
         text = preprocess_text(text)
-        text = tn_engine.tn(text).strip()
+        text = self.tn_engine.tn(text).strip()
         text_lang_pairs = postprocess_text(text)
         return text_lang_pairs
 

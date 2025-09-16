@@ -319,8 +319,6 @@ class FireRedTTS_Redserving:
         initial_embeddings = torch.cat([emb, audio_bos_emb], dim=1).half().detach()
         # print("---initial_embeddings:\n", initial_embeddings, initial_embeddings.shape)
 
-        # -------------------------------------------------------------------------------
-
         # ------------------------------------ GPT infer ------------------------------------
         inputs_em = []
         for in_em in initial_embeddings:
@@ -441,11 +439,6 @@ class FireRedTTS_Redserving:
             )
         elif target_mel_length < prompt_mel.shape[1]:
             prompt_mel = prompt_mel[:, :target_mel_length]
-        # prompt_mel = F.interpolate(
-        #     prompt_mel.transpose(1, 2),
-        #     size=prompt_token.shape[1] * 2,
-        #     mode="nearest",
-        # ).transpose(1, 2)
         audio = self.token2wav.inference(
             prompt_token=prompt_token,
             prompt_xvec=prompt_spk.view(1, -1),
@@ -523,15 +516,6 @@ class FireRedTTS_Redserving:
             else:  # normal inference
                 text_token_len = len(text_tokens[0])
                 print("---len_text_token:", text_token_len)
-                # if text_token_len <= 9:
-                #     gpt_start_time = time.time()
-                #     gpt_codes = self.do_gpt_inference_short(
-                #         spk_gpt=spk_gpt,
-                #         text_tokens=text_tokens,
-                #     )
-                #     gpt_end_time = time.time()
-                #     gpt_dur = gpt_end_time - gpt_start_time
-                # else:
 
                 gpt_start_time = time.time()
                 gpt_codes = self.do_gpt_inference(
@@ -554,11 +538,6 @@ class FireRedTTS_Redserving:
                 voc_end_time = time.time()
                 voc_dur = voc_end_time - voc_start_time
 
-                # # trunk head
-                # if text_token_len <= 9:
-                #     if gpt_codes.shape[1] > offset + 4:
-                #         rec_wavs = rec_wavs[:, offset * 960 :]
-
                 out_wavs.append(rec_wavs.detach().cpu())
                 out_wav = torch.concat(out_wavs, axis=-1)
                 audio_dur = out_wav.shape[-1] / 24000
@@ -572,150 +551,3 @@ class FireRedTTS_Redserving:
         except:
             return "501", None
 
-    # def synthesize(self, prompt_wav, text, lang="auto"):
-    #     """_summary_
-
-    #     Args:
-    #         prompts_wav (_type_): prompts_wav path
-    #         text (_type_): text
-    #         lang (_type_): language of text
-    #     """
-    #     # Currently only supports Chinese and English
-    #     assert lang in ["zh", "en", "auto"]
-    #     assert os.path.exists(prompt_wav)
-
-    #     # extract speaker embedding & prompt mel-spectrogram compute
-    #     spk_embeddings = self.extract_spk_embeddings(prompt_wav=prompt_wav).unsqueeze(0)
-    #     with torch.no_grad():
-    #         spk_gpt = self.gpt.reference_embedding(spk_embeddings)  # [1,1,1024]
-    #     prompt_mel = (
-    #         self.mel_extractor(wav_path=prompt_wav).unsqueeze(0).to(self.device)
-    #     )
-
-    #     # text to tokens
-    #     lines = self.split_and_normalize(text=text, lang=lang)
-    #     print("---text:\n", lines)
-
-    #     # tokenize text
-    #     text_tokens = [self.text_tokenizer.encode(text=line) for line in lines]
-    #     print("---text_tokens:\n", text_tokens, len(text_tokens))
-
-    #     # merge text tokens
-    #     if (len(text_tokens)) > 1:
-    #         text_tokens = self.merge_text_tokens(text_tokens=text_tokens)
-
-    #     out_wavs = []
-    #     # normal inference
-    #     if len(text_tokens) > 1:
-
-    #         # batch inference
-    #         gpt_batch_start_time = time.time()
-    #         gpt_coeds_seqs = self.do_gpt_inference_batch(
-    #             spk_gpt=spk_gpt, text_tokens=text_tokens
-    #         )
-    #         gpt_batch_end_time = time.time()
-    #         gpt_batch_dur = gpt_batch_end_time - gpt_batch_start_time
-    #         for gpt_codes in gpt_coeds_seqs:
-    #             # print("---gpt_coeds:\n", gpt_codes, gpt_codes.shape)
-    #             gpt_codes = gpt_codes.unsqueeze(0)
-
-    #             # convert token to waveform (b=1, t)
-    #             # voc_start_time = time.time()
-    #             rec_wavs = self.token2wav.inference(
-    #                 gpt_codes, prompt_mel, n_timesteps=10
-    #             )
-    #             # voc_end_time = time.time()
-    #             # voc_dur = voc_end_time - voc_start_time
-    #             # all_dur = voc_end_time - gpt_start_time
-
-    #             # rtf compute
-    #             # audio_dur = rec_wavs.shape[-1] / 24000
-    #             # rtf_gpt = gpt_dur / audio_dur
-    #             # rtf_voc = voc_dur / audio_dur
-    #             # rtf_all = all_dur / audio_dur
-    #             out_wavs.append(rec_wavs.detach().cpu())
-
-    #         out_wav = torch.concat(out_wavs, axis=-1)
-
-    #         print("---gpt_batch_dur:", gpt_batch_dur)
-    #         print("---out_wav:", out_wav, out_wav.shape, (out_wav.shape[-1] / 24000))
-    #         print("rtf_gpt_batch:", gpt_batch_dur / (out_wav.shape[-1] / 24000))
-
-    #         # for inference
-    #         out_wavs = []
-    #         gpt_start_time = time.time()
-    #         for text_token in text_tokens:
-    #             # gpt inference
-    #             gpt_codes = self.do_gpt_inference(
-    #                 spk_gpt=spk_gpt, text_tokens=[text_token]
-    #             )
-
-    #             # convert token to waveform (b=1, t)
-    #             # voc_start_time = time.time()
-    #             rec_wavs = self.token2wav.inference(
-    #                 gpt_codes, prompt_mel, n_timesteps=10
-    #             )
-    #             # voc_end_time = time.time()
-    #             # voc_dur = voc_end_time - voc_start_time
-    #             # all_dur = voc_end_time - gpt_start_time
-
-    #             # rtf compute
-    #             # audio_dur = rec_wavs.shape[-1] / 24000
-    #             # rtf_gpt = gpt_dur / audio_dur
-    #             # rtf_voc = voc_dur / audio_dur
-    #             # rtf_all = all_dur / audio_dur
-    #             out_wavs.append(rec_wavs.detach().cpu())
-
-    #         gpt_end_time = time.time()
-    #         gpt_dur = gpt_end_time - gpt_start_time
-
-    #         out_wav = torch.concat(out_wavs, axis=-1)
-
-    #         print("---gpt_dur:", gpt_dur)
-    #         print("---out_wav:", out_wav, out_wav.shape, (out_wav.shape[-1] / 24000))
-    #         print("rtf_gpt:", gpt_dur / (out_wav.shape[-1] / 24000))
-
-    #     else:
-    #         text_token = text_tokens[0]
-    #         print("---len_text_token:", len(text_token))
-    #         if len(text_token) < 8:
-    #             # gpt inference short [1,time]
-    #             gpt_start_time = time.time()
-    #             gpt_codes = self.do_gpt_inference_short(
-    #                 spk_gpt=spk_gpt, text_tokens=text_tokens, trunk_offset=50
-    #             )
-    #             gpt_end_time = time.time()
-    #             gpt_dur = gpt_end_time - gpt_start_time
-    #         else:
-    #             # gpt inference [1,time]
-    #             gpt_start_time = time.time()
-    #             gpt_codes = self.do_gpt_inference(
-    #                 spk_gpt=spk_gpt, text_tokens=text_tokens
-    #             )
-    #             gpt_end_time = time.time()
-    #             gpt_dur = gpt_end_time - gpt_start_time
-
-    #         # print("---gpt_coeds:\n", gpt_codes, gpt_codes.shape)
-
-    #         # convert token to waveform (b=1, t)
-    #         voc_start_time = time.time()
-    #         rec_wavs = self.token2wav.inference(gpt_codes, prompt_mel, n_timesteps=10)
-    #         voc_end_time = time.time()
-    #         voc_dur = voc_end_time - voc_start_time
-
-    #         # rtf compute
-    #         #
-    #         # rtf_gpt = gpt_dur / audio_dur
-    #         # rtf_voc = voc_dur / audio_dur
-    #         # rtf_all = all_dur / audio_dur
-    #         out_wavs.append(rec_wavs.detach().cpu())
-    #         out_wav = torch.concat(out_wavs, axis=-1)
-
-    #         audio_dur = out_wav.shape[-1] / 24000
-
-    #         print("---gpt_dur:", gpt_dur)
-    #         print("---out_wav:", out_wav, out_wav.shape)
-    #         print("rtf_gpt:", gpt_dur / audio_dur)
-    #         print("rtf_decoder:", voc_dur, voc_dur / audio_dur)
-
-    #     return out_wav
