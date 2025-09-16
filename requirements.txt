@@ -1,10 +1,12 @@
-diffusers==0.27.2
+diffusers==0.31.0
 librosa==0.10.2
 soundfile==0.12.1
 einops==0.8.0
-transformers==4.44.2
+transformers==4.46.2
 tiktoken==0.7.0
 inflect==7.4.0
 lingua-language-detector==2.0.2
 WeTextProcessing==1.0.3
 sentencex==0.6.1
+pybind11==2.13.6
+torchaudio==2.4.0

@@ -11,4 +11,4 @@ damo/*
 !3.wav
 */**/.DS_Store
 *.egg-info
-*/**/*.pt
+# */**/*.pt

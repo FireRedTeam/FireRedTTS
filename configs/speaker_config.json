@@ -1,0 +1,9 @@
+{
+    "f531": {
+        "prompt_text": "xxx",
+        "token": "features/f531/token.pt",
+        "spk": "features/f531/spk.pt",
+        "mel": "features/f531/mel.pt",
+        "offset": 60
+    }
+}

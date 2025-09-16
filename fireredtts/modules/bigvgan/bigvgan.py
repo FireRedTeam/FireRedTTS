@@ -4,8 +4,10 @@ import torch.nn as nn
 from torch.nn import Conv1d, ConvTranspose1d
 from torch.nn.utils import weight_norm, remove_weight_norm
 
-from .alias_free_torch import Activation1d as TorchActivation1d
-from .activations import Snake, SnakeBeta
+from fireredtts.modules.bigvgan.alias_free_torch import (
+    Activation1d as TorchActivation1d,
+)
+from fireredtts.modules.bigvgan.activations import Snake, SnakeBeta
 
 
 def init_weights(m, mean=0.0, std=0.01):
@@ -26,6 +28,7 @@ class AMPBlock1(torch.nn.Module):
         dilation=(1, 3, 5),
         activation=None,
         snake_logscale=True,
+        use_cuda_kernel=False,
     ):
         super(AMPBlock1, self).__init__()
 
@@ -105,7 +108,16 @@ class AMPBlock1(torch.nn.Module):
             self.convs2
         )  # total number of conv layers
 
-        Activation1d = TorchActivation1d
+        # select which Activation1d, lazy-load cuda version to ensure backward compatibility
+        if use_cuda_kernel:
+            from modules.bigvgan.alias_free_cuda.activation1d import (
+                Activation1d as CudaActivation1d,
+            )
+
+            Activation1d = CudaActivation1d
+        else:
+            Activation1d = TorchActivation1d
+
         if (
             activation == "snake"
         ):  # periodic nonlinearity with snake function and anti-aliasing
@@ -159,6 +171,7 @@ class AMPBlock2(torch.nn.Module):
         dilation=(1, 3),
         activation=None,
         snake_logscale=True,
+        use_cuda_kernel=False,
     ):
         super(AMPBlock2, self).__init__()
 
@@ -190,7 +203,15 @@ class AMPBlock2(torch.nn.Module):
 
         self.num_layers = len(self.convs)  # total number of conv layers
 
-        Activation1d = TorchActivation1d
+        # select which Activation1d, lazy-load cuda version to ensure backward compatibility
+        if use_cuda_kernel:
+            from modules.bigvgan.alias_free_cuda.activation1d import (
+                Activation1d as CudaActivation1d,
+            )
+
+            Activation1d = CudaActivation1d
+        else:
+            Activation1d = TorchActivation1d
 
         if (
             activation == "snake"
@@ -247,6 +268,7 @@ class BigVGAN(torch.nn.Module):
         activation: str = "snakebeta",
         use_tanh_at_final: bool = False,
         use_bias_at_final: bool = False,
+        use_cuda_kernel: bool = False,
         **kwargs,
     ):
         super(BigVGAN, self).__init__()
@@ -295,10 +317,19 @@ class BigVGAN(torch.nn.Module):
                         d,
                         activation=activation,
                         snake_logscale=snake_logscale,
+                        use_cuda_kernel=use_cuda_kernel,
                     )
                 )
 
-        Activation1d = TorchActivation1d
+        # select which Activation1d, lazy-load cuda version to ensure backward compatibility
+        if use_cuda_kernel:
+            from modules.bigvgan.alias_free_cuda.activation1d import (
+                Activation1d as CudaActivation1d,
+            )
+
+            Activation1d = CudaActivation1d
+        else:
+            Activation1d = TorchActivation1d
 
         # post conv
         if (
